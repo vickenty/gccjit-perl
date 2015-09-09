@@ -8,6 +8,7 @@
 #include <libgccjit.h>
 
 #include "const-c.inc"
+#include "av_to_pp.h"
 
 MODULE = GCCJIT		PACKAGE = GCCJIT		
 
@@ -65,13 +66,19 @@ gcc_jit_block_end_with_return(block, loc, rvalue)
 	gcc_jit_rvalue *	rvalue
 
 void
-gcc_jit_block_end_with_switch(block, loc, expr, default_block, num_cases, cases)
+gcc_jit_block_end_with_switch(block, loc, expr, default_block, cases)
 	gcc_jit_block *	block
 	gcc_jit_location *	loc
 	gcc_jit_rvalue *	expr
 	gcc_jit_block *	default_block
-	int	num_cases
-	gcc_jit_case **	cases
+	AV *	cases
+PREINIT:
+	AVPP_PREINIT(cases, gcc_jit_case *);
+CODE:
+	AVPP_CODE(cases, "gcc_jit_block_end_with_switch", gcc_jit_case *, "gcc_jit_casePtr");
+	gcc_jit_block_end_with_switch(block, loc, expr, default_block, num_cases, ptr_cases);
+CLEANUP:
+	AVPP_CLEANUP(cases);
 
 void
 gcc_jit_block_end_with_void_return(block, loc)
@@ -218,24 +225,40 @@ gcc_jit_context_new_field(ctxt, loc, type, name)
 	const char *	name
 
 gcc_jit_function *
-gcc_jit_context_new_function(ctxt, loc, kind, return_type, name, num_params, params, is_variadic)
+gcc_jit_context_new_function(ctxt, loc, kind, return_type, name, params, is_variadic)
 	gcc_jit_context *	ctxt
 	gcc_jit_location *	loc
 	enum gcc_jit_function_kind	kind
 	gcc_jit_type *	return_type
 	const char *	name
-	int	num_params
-	gcc_jit_param **	params
+	AV *	params
 	int	is_variadic
+PREINIT:
+	AVPP_PREINIT(params, gcc_jit_param *);
+CODE:
+	AVPP_CODE(params, "gcc_jit_context_new_function", gcc_jit_param *, "gcc_jit_paramPtr");
+	RETVAL = gcc_jit_context_new_function(ctxt, loc, kind, return_type, name, num_params, ptr_params, is_variadic);
+OUTPUT:
+	RETVAL
+CLEANUP:
+	AVPP_CLEANUP(params);
 
 gcc_jit_type *
-gcc_jit_context_new_function_ptr_type(ctxt, loc, return_type, num_params, param_types, is_variadic)
+gcc_jit_context_new_function_ptr_type(ctxt, loc, return_type, param_types, is_variadic)
 	gcc_jit_context *	ctxt
 	gcc_jit_location *	loc
 	gcc_jit_type *	return_type
-	int	num_params
-	gcc_jit_type **	param_types
+	AV *	param_types
 	int	is_variadic
+PREINIT:
+	AVPP_PREINIT(param_types, gcc_jit_type *);
+CODE:
+	AVPP_CODE(param_types, "gcc_jit_context_new_function_ptr_type", gcc_jit_type *, "gcc_jit_typePtr");
+	RETVAL = gcc_jit_context_new_function_ptr_type(ctxt, loc, return_type, num_param_types, ptr_param_types, is_variadic);
+OUTPUT:
+	RETVAL
+CLEANUP:
+	AVPP_CLEANUP(param_types);
 
 gcc_jit_lvalue *
 gcc_jit_context_new_global(ctxt, loc, kind, type, name)
@@ -295,12 +318,20 @@ gcc_jit_context_new_string_literal(ctxt, value)
 	const char *	value
 
 gcc_jit_struct *
-gcc_jit_context_new_struct_type(ctxt, loc, name, num_fields, fields)
+gcc_jit_context_new_struct_type(ctxt, loc, name, fields)
 	gcc_jit_context *	ctxt
 	gcc_jit_location *	loc
 	const char *	name
-	int	num_fields
-	gcc_jit_field **	fields
+	AV *	fields
+PREINIT:
+	AVPP_PREINIT(fields, gcc_jit_field *);
+CODE:
+	AVPP_CODE(fields, "gcc_jit_context_new_struct_type", gcc_jit_field *, "gcc_jit_fieldPtr");
+	RETVAL = gcc_jit_context_new_struct_type(ctxt, loc, name, num_fields, ptr_fields);
+OUTPUT:
+	RETVAL
+CLEANUP:
+	AVPP_CLEANUP(fields);
 
 gcc_jit_rvalue *
 gcc_jit_context_new_unary_op(ctxt, loc, op, result_type, rvalue)
@@ -311,12 +342,20 @@ gcc_jit_context_new_unary_op(ctxt, loc, op, result_type, rvalue)
 	gcc_jit_rvalue *	rvalue
 
 gcc_jit_type *
-gcc_jit_context_new_union_type(ctxt, loc, name, num_fields, fields)
+gcc_jit_context_new_union_type(ctxt, loc, name, fields)
 	gcc_jit_context *	ctxt
 	gcc_jit_location *	loc
 	const char *	name
-	int	num_fields
-	gcc_jit_field **	fields
+	AV *	fields
+PREINIT:
+	AVPP_PREINIT(fields, gcc_jit_field *);
+CODE:
+	AVPP_CODE(fields, "gcc_jit_context_new_union_type", gcc_jit_field *, "gcc_jit_fieldPtr");
+	RETVAL = gcc_jit_context_new_union_type(ctxt, loc, name, num_fields, ptr_fields);
+OUTPUT:
+	RETVAL
+CLEANUP:
+	AVPP_CLEANUP(fields);
 
 gcc_jit_rvalue *
 gcc_jit_context_null(ctxt, pointer_type)
@@ -484,11 +523,17 @@ gcc_jit_struct_as_type(struct_type)
 	gcc_jit_struct *	struct_type
 
 void
-gcc_jit_struct_set_fields(struct_type, loc, num_fields, fields)
+gcc_jit_struct_set_fields(struct_type, loc, fields)
 	gcc_jit_struct *	struct_type
 	gcc_jit_location *	loc
-	int	num_fields
-	gcc_jit_field **	fields
+	AV *	fields
+PREINIT:
+	AVPP_PREINIT(fields, gcc_jit_field *);
+CODE:
+	AVPP_CODE(fields, "gcc_jit_struct_set_fields", gcc_jit_field *, "gcc_jit_fieldPtr");
+	gcc_jit_struct_set_fields(struct_type, loc, num_fields, ptr_fields);
+CLEANUP:
+	AVPP_CLEANUP(fields);
 
 gcc_jit_object *
 gcc_jit_type_as_object(type)
