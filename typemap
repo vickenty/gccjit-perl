@@ -1,14 +1,14 @@
-const char *					T_PTROBJ
-enum gcc_jit_binary_op				T_PTROBJ
-enum gcc_jit_bool_option			T_PTROBJ
-enum gcc_jit_comparison				T_PTROBJ
-enum gcc_jit_function_kind			T_PTROBJ
-enum gcc_jit_global_kind			T_PTROBJ
-enum gcc_jit_int_option				T_PTROBJ
-enum gcc_jit_output_kind			T_PTROBJ
-enum gcc_jit_str_option				T_PTROBJ
-enum gcc_jit_types				T_PTROBJ
-enum gcc_jit_unary_op				T_PTROBJ
+const char *					T_PV
+enum gcc_jit_binary_op				T_ENUM
+enum gcc_jit_bool_option			T_ENUM
+enum gcc_jit_comparison				T_ENUM
+enum gcc_jit_function_kind			T_ENUM
+enum gcc_jit_global_kind			T_ENUM
+enum gcc_jit_int_option				T_ENUM
+enum gcc_jit_output_kind			T_ENUM
+enum gcc_jit_str_option				T_ENUM
+enum gcc_jit_types				T_ENUM
+enum gcc_jit_unary_op				T_ENUM
 gcc_jit_block *					T_PTROBJ
 gcc_jit_case *					T_PTROBJ
 gcc_jit_case **					T_PTROBJ
