@@ -122,11 +122,23 @@ gcc_jit_context_dump_to_file(ctxt, path, update_locations)
 	const char *	path
 	int	update_locations
 
+
+=for Disable
+
+Disabled, because out_ptr is hard to handle in XS: it is only written to when
+gcc_jit_context_compile() is called, which means there is nothing to do here,
+and whatever happens in gcc_jit_context_compile() wrapper must know somehow
+about the out_ptr we got here. Integrated wrapper that calls both
+gcc_jit_context_enable_dump() and gcc_jit_context_compile() together would be a
+solution, but meh.
+
 void
 gcc_jit_context_enable_dump(ctxt, dumpname, out_ptr)
 	gcc_jit_context *	ctxt
 	const char *	dumpname
 	char **	out_ptr
+
+=cut
 
 gcc_jit_function *
 gcc_jit_context_get_builtin_function(ctxt, name)
