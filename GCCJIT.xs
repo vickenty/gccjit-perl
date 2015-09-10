@@ -176,20 +176,36 @@ gcc_jit_context_new_binary_op(ctxt, loc, op, result_type, a, b)
 	gcc_jit_rvalue *	b
 
 gcc_jit_rvalue *
-gcc_jit_context_new_call(ctxt, loc, func, numargs, args)
+gcc_jit_context_new_call(ctxt, loc, func, args)
 	gcc_jit_context *	ctxt
 	gcc_jit_location *	loc
 	gcc_jit_function *	func
-	int	numargs
-	gcc_jit_rvalue **	args
+	AV *	args
+PREINIT:
+	AVPP_PREINIT(args, gcc_jit_rvalue *);
+CODE:
+	AVPP_CODE(args, "gcc_jit_context_new_call", gcc_jit_rvalue *, "gcc_jit_rvaluePtr");
+	RETVAL = gcc_jit_context_new_call(ctxt, loc, func, num_args, ptr_args);
+OUTPUT:
+	RETVAL
+CLEANUP:
+	AVPP_CLEANUP(args);
 
 gcc_jit_rvalue *
-gcc_jit_context_new_call_through_ptr(ctxt, loc, fn_ptr, numargs, args)
+gcc_jit_context_new_call_through_ptr(ctxt, loc, fn_ptr, args)
 	gcc_jit_context *	ctxt
 	gcc_jit_location *	loc
 	gcc_jit_rvalue *	fn_ptr
-	int	numargs
-	gcc_jit_rvalue **	args
+	AV *	args
+PREINIT:
+	AVPP_PREINIT(args, gcc_jit_rvalue *);
+CODE:
+	AVPP_CODE(args, "gcc_jit_context_new_call_through_ptr", gcc_jit_rvalue *, "gcc_jit_rvaluePtr");
+	RETVAL = gcc_jit_context_new_call_through_ptr(ctxt, loc, fn_ptr, num_args, ptr_args);
+OUTPUT:
+	RETVAL
+CLEANUP:
+	AVPP_CLEANUP(args);
 
 gcc_jit_case *
 gcc_jit_context_new_case(ctxt, min_value, max_value, dest_block)
