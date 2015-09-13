@@ -102,10 +102,13 @@ gcc_jit_case_as_object(case_)
 gcc_jit_context *
 gcc_jit_context_acquire()
 
+#ifdef LIBGCCJIT_HAVE_gcc_jit_context_add_command_line_option
 void
 gcc_jit_context_add_command_line_option(ctxt, optname)
 	gcc_jit_context *	ctxt
 	const char *	optname
+
+#endif
 
 gcc_jit_result *
 gcc_jit_context_compile(ctxt)
@@ -408,10 +411,13 @@ void
 gcc_jit_context_release(ctxt)
 	gcc_jit_context *	ctxt
 
+#ifdef LIBGCCJIT_HAVE_gcc_jit_context_set_bool_allow_unreachable_blocks
 void
 gcc_jit_context_set_bool_allow_unreachable_blocks(ctxt, bool_value)
 	gcc_jit_context *	ctxt
 	int	bool_value
+
+#endif
 
 void
 gcc_jit_context_set_bool_option(ctxt, opt, value)
