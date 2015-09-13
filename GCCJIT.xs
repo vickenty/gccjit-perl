@@ -65,6 +65,7 @@ gcc_jit_block_end_with_return(block, loc, rvalue)
 	gcc_jit_location *	loc
 	gcc_jit_rvalue *	rvalue
 
+#ifdef LIBGCCJIT_HAVE_SWITCH_STATEMENTS
 void
 gcc_jit_block_end_with_switch(block, loc, expr, default_block, cases)
 	gcc_jit_block *	block
@@ -79,6 +80,7 @@ CODE:
 	gcc_jit_block_end_with_switch(block, loc, expr, default_block, num_cases, ptr_cases);
 CLEANUP:
 	AVPP_CLEANUP(cases);
+#endif
 
 void
 gcc_jit_block_end_with_void_return(block, loc)
@@ -89,9 +91,11 @@ gcc_jit_function *
 gcc_jit_block_get_function(block)
 	gcc_jit_block *	block
 
+#ifdef LIBGCCJIT_HAVE_SWITCH_STATEMENTS
 gcc_jit_object *
 gcc_jit_case_as_object(case_)
 	gcc_jit_case *	case_
+#endif
 
 gcc_jit_context *
 gcc_jit_context_acquire()
@@ -219,12 +223,14 @@ OUTPUT:
 CLEANUP:
 	AVPP_CLEANUP(args);
 
+#ifdef LIBGCCJIT_HAVE_SWITCH_STATEMENTS
 gcc_jit_case *
 gcc_jit_context_new_case(ctxt, min_value, max_value, dest_block)
 	gcc_jit_context *	ctxt
 	gcc_jit_rvalue *	min_value
 	gcc_jit_rvalue *	max_value
 	gcc_jit_block *	dest_block
+#endif
 
 gcc_jit_rvalue *
 gcc_jit_context_new_cast(ctxt, loc, rvalue, type)
