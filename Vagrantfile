@@ -18,6 +18,7 @@ TEMPLATES = {
 
 def prov(vm, kind, box)
     vm.vm.box = box
+    vm.vm.box_check_update = false
     for script in TEMPLATES[kind]
         vm.vm.provision "shell", inline: script
     end
