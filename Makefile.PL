@@ -19,6 +19,9 @@ WriteMakefile(
     TEST_REQUIRES     => {
     	"FFI::Raw" => "0.30",
     },
+    PREREQ_PM         => {
+    	"ExtUtils::WeakWrapperGenerator" => 0,
+    },
 );
 if  (eval {require ExtUtils::Constant; 1}) {
   # If you edit these definitions to change the constants used by this module,
