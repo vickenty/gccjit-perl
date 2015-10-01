@@ -10,13 +10,13 @@ package gcc_jit_contextPtr {
 
     sub WRAP {
         my ($self, $other) = @_;
-        $stash{$$self} = $other;
+        $stash{$self} = $other;
         return $self;
     }
 
     sub DESTROY {
         my $self = shift;
-        delete $stash{$$self};
+        delete $stash{$self};
         $self->release();
     }
 }
