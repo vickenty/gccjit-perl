@@ -21,6 +21,13 @@ package gcc_jit_contextPtr {
     }
 }
 
+package gcc_jit_resultPtr {
+    sub DESTROY {
+        my $self = shift;
+        $self->release();
+    }
+}
+
 my $owned_class_name = __PACKAGE__ . "::WeakWrapper";
 ExtUtils::WeakWrapperGenerator->generate_owned_class($owned_class_name, "gcc_jit_contextPtr", "context");
 
@@ -48,7 +55,7 @@ ExtUtils::WeakWrapperGenerator->generate_from_xs(
         package_callback => sub {
             my ($package) = @_;
 
-            if ($package =~ /^gcc_jit_.*Ptr$/ && $package ne "gcc_jit_contextPtr") {
+            if ($package =~ /^gcc_jit_.*Ptr$/ && $package !~ /^gcc_jit_(context|result)Ptr$/) {
                 no strict "refs";
                 @{"${package}::ISA"} = $owned_class_name;
             }
