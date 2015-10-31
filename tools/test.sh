@@ -18,6 +18,6 @@ if [ "$1" = "vagrant-run" ]; then
 else 
 	for vm in $VMS; do
 		echo "Running tests in $vm"
-		vagrant ssh $vm -- "$SRCDIR/test.sh" vagrant-run
+		vagrant ssh $vm -- "$SRCDIR/tools/test.sh" vagrant-run
 	done
 fi
