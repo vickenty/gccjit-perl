@@ -1,6 +1,6 @@
 RPM_PACKAGES="perl perl-devel cpan gcc make libgccjit-devel git"
 APT_PACKAGES="build-essential libperl-dev git libgccjit-5-dev"
-CPAN_PACKAGES="FFI::Raw"
+CPAN_PACKAGES="FFI::Raw Test::Fatal"
 
 TEMPLATES = {
     fedora: [

@@ -18,6 +18,7 @@ WriteMakefile(
     # OBJECT            => '$(O_FILES)', # link all the C files too
     TEST_REQUIRES     => {
     	"FFI::Raw" => "0.30",
+	"Test::Fatal" => 0,
     },
     PREREQ_PM         => {
     },
