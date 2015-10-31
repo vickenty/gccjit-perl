@@ -20,7 +20,6 @@ WriteMakefile(
     	"FFI::Raw" => "0.30",
     },
     PREREQ_PM         => {
-    	"ExtUtils::WeakWrapperGenerator" => 0,
     },
 );
 if  (eval {require ExtUtils::Constant; 1}) {
