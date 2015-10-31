@@ -1,245 +1,620 @@
 package GCCJIT::Wrapper;
 use strict;
 use warnings;
-
+use Scalar::Util qw/weaken/;
 use GCCJIT;
-use ExtUtils::WeakWrapperGenerator;
 
-package gcc_jit_contextPtr {
-    my %stash;
-
-    sub WRAP {
-        my ($self, $other) = @_;
-        $stash{$self} = $other;
-        return $self;
-    }
-
-    sub DESTROY {
-        my $self = shift;
-        delete $stash{$self};
-        $self->release();
-    }
+my %stash;
+sub gcc_jit_blockPtr::add_assignment {
+    die "this block is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_blockPtr"}{$_[0]};
+    GCCJIT::gcc_jit_block_add_assignment(@_);
 }
 
-package gcc_jit_resultPtr {
-    sub DESTROY {
-        my $self = shift;
-        $self->release();
-    }
+sub gcc_jit_blockPtr::add_assignment_op {
+    die "this block is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_blockPtr"}{$_[0]};
+    GCCJIT::gcc_jit_block_add_assignment_op(@_);
 }
 
-my $owned_class_name = __PACKAGE__ . "::WeakWrapper";
-ExtUtils::WeakWrapperGenerator->generate_owned_class($owned_class_name, "gcc_jit_contextPtr", "context");
+sub gcc_jit_blockPtr::add_comment {
+    die "this block is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_blockPtr"}{$_[0]};
+    GCCJIT::gcc_jit_block_add_comment(@_);
+}
 
-my @xs_blacklist = (
-    qr{get_context$},
-);
+sub gcc_jit_blockPtr::add_eval {
+    die "this block is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_blockPtr"}{$_[0]};
+    GCCJIT::gcc_jit_block_add_eval(@_);
+}
 
-ExtUtils::WeakWrapperGenerator->generate_from_xs(
-    {
-        xs_package => "GCCJIT",
+sub gcc_jit_blockPtr::as_object {
+    die "this block is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_blockPtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_block_as_object(@_);
+    $stash{"gcc_jit_objectPtr"}{$obj} = $stash{"gcc_jit_blockPtr"}{$_[0]};
+    weaken $stash{"gcc_jit_objectPtr"}{$obj};
+    $obj;
+}
 
-        parse_xs_name => sub {
-            my ($name) = @_;
+sub gcc_jit_blockPtr::end_with_conditional {
+    die "this block is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_blockPtr"}{$_[0]};
+    GCCJIT::gcc_jit_block_end_with_conditional(@_);
+}
 
-            # If compiled against an older gccjit library, some functions may
-            # not be available and that's ok.
-            return unless GCCJIT->can($name);
-            # Other functions are excluded explicitly.
-            return if grep { $name =~ $_ } @xs_blacklist;
+sub gcc_jit_blockPtr::end_with_jump {
+    die "this block is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_blockPtr"}{$_[0]};
+    GCCJIT::gcc_jit_block_end_with_jump(@_);
+}
 
-            my ($class, $method) = $name =~ /^gcc_jit_([a-z]+)_(.*)/;
-            return "gcc_jit_${class}Ptr", $method;
-        },
+sub gcc_jit_blockPtr::end_with_return {
+    die "this block is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_blockPtr"}{$_[0]};
+    GCCJIT::gcc_jit_block_end_with_return(@_);
+}
 
-        package_callback => sub {
-            my ($package) = @_;
+sub gcc_jit_blockPtr::end_with_switch {
+    die "this block is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_blockPtr"}{$_[0]};
+    GCCJIT::gcc_jit_block_end_with_switch(@_);
+}
 
-            if ($package =~ /^gcc_jit_.*Ptr$/ && $package !~ /^gcc_jit_(context|result)Ptr$/) {
-                no strict "refs";
-                @{"${package}::ISA"} = $owned_class_name;
-            }
-        },
-    },
-    # Extracted from GCCJIT.xs with Vim command:
-    # :%g/^\(const \)\?[a-z][^ ]\+\( \*\)\?\ngcc_jit_/,+1 y A
-    # "aP
-    q!
-        void
-        gcc_jit_block_add_assignment(block, loc, lvalue, rvalue)
-        void
-        gcc_jit_block_add_assignment_op(block, loc, lvalue, op, rvalue)
-        void
-        gcc_jit_block_add_comment(block, loc, text)
-        void
-        gcc_jit_block_add_eval(block, loc, rvalue)
-        gcc_jit_object *
-        gcc_jit_block_as_object(block)
-        void
-        gcc_jit_block_end_with_conditional(block, loc, boolval, on_true, on_false)
-        void
-        gcc_jit_block_end_with_jump(block, loc, target)
-        void
-        gcc_jit_block_end_with_return(block, loc, rvalue)
-        void
-        gcc_jit_block_end_with_switch(block, loc, expr, default_block, cases)
-        void
-        gcc_jit_block_end_with_void_return(block, loc)
-        gcc_jit_function *
-        gcc_jit_block_get_function(block)
-        gcc_jit_object *
-        gcc_jit_case_as_object(case_)
-        gcc_jit_context *
-        gcc_jit_context_acquire()
-        void
-        gcc_jit_context_add_command_line_option(ctxt, optname)
-        gcc_jit_result *
-        gcc_jit_context_compile(ctxt)
-        void
-        gcc_jit_context_compile_to_file(ctxt, output_kind, output_path)
-        void
-        gcc_jit_context_dump_reproducer_to_file(ctxt, path)
-        void
-        gcc_jit_context_dump_to_file(ctxt, path, update_locations)
-        void
-        gcc_jit_context_enable_dump(ctxt, dumpname, out_ptr)
-        gcc_jit_function *
-        gcc_jit_context_get_builtin_function(ctxt, name)
-        const char *
-        gcc_jit_context_get_first_error(ctxt)
-        gcc_jit_type *
-        gcc_jit_context_get_int_type(ctxt, num_bytes, is_signed)
-        const char *
-        gcc_jit_context_get_last_error(ctxt)
-        gcc_jit_type *
-        gcc_jit_context_get_type(ctxt, type_)
-        gcc_jit_lvalue *
-        gcc_jit_context_new_array_access(ctxt, loc, ptr, index)
-        gcc_jit_type *
-        gcc_jit_context_new_array_type(ctxt, loc, element_type, num_elements)
-        gcc_jit_rvalue *
-        gcc_jit_context_new_binary_op(ctxt, loc, op, result_type, a, b)
-        gcc_jit_rvalue *
-        gcc_jit_context_new_call(ctxt, loc, func, args)
-        gcc_jit_rvalue *
-        gcc_jit_context_new_call_through_ptr(ctxt, loc, fn_ptr, args)
-        gcc_jit_case *
-        gcc_jit_context_new_case(ctxt, min_value, max_value, dest_block)
-        gcc_jit_rvalue *
-        gcc_jit_context_new_cast(ctxt, loc, rvalue, type)
-        gcc_jit_context *
-        gcc_jit_context_new_child_context(parent_ctxt)
-        gcc_jit_rvalue *
-        gcc_jit_context_new_comparison(ctxt, loc, op, a, b)
-        gcc_jit_field *
-        gcc_jit_context_new_field(ctxt, loc, type, name)
-        gcc_jit_function *
-        gcc_jit_context_new_function(ctxt, loc, kind, return_type, name, params, is_variadic)
-        gcc_jit_type *
-        gcc_jit_context_new_function_ptr_type(ctxt, loc, return_type, param_types, is_variadic)
-        gcc_jit_lvalue *
-        gcc_jit_context_new_global(ctxt, loc, kind, type, name)
-        gcc_jit_location *
-        gcc_jit_context_new_location(ctxt, filename, line, column)
-        gcc_jit_struct *
-        gcc_jit_context_new_opaque_struct(ctxt, loc, name)
-        gcc_jit_param *
-        gcc_jit_context_new_param(ctxt, loc, type, name)
-        gcc_jit_rvalue *
-        gcc_jit_context_new_rvalue_from_double(ctxt, numeric_type, value)
-        gcc_jit_rvalue *
-        gcc_jit_context_new_rvalue_from_int(ctxt, numeric_type, value)
-        gcc_jit_rvalue *
-        gcc_jit_context_new_rvalue_from_long(ctxt, numeric_type, value)
-        gcc_jit_rvalue *
-        gcc_jit_context_new_rvalue_from_ptr(ctxt, pointer_type, value)
-        gcc_jit_rvalue *
-        gcc_jit_context_new_string_literal(ctxt, value)
-        gcc_jit_struct *
-        gcc_jit_context_new_struct_type(ctxt, loc, name, fields)
-        gcc_jit_rvalue *
-        gcc_jit_context_new_unary_op(ctxt, loc, op, result_type, rvalue)
-        gcc_jit_type *
-        gcc_jit_context_new_union_type(ctxt, loc, name, fields)
-        gcc_jit_rvalue *
-        gcc_jit_context_null(ctxt, pointer_type)
-        gcc_jit_rvalue *
-        gcc_jit_context_one(ctxt, numeric_type)
-        void
-        gcc_jit_context_release(ctxt)
-        void
-        gcc_jit_context_set_bool_allow_unreachable_blocks(ctxt, bool_value)
-        void
-        gcc_jit_context_set_bool_option(ctxt, opt, value)
-        void
-        gcc_jit_context_set_int_option(ctxt, opt, value)
-        void
-        gcc_jit_context_set_logfile(ctxt, logfile, flags, verbosity)
-        void
-        gcc_jit_context_set_str_option(ctxt, opt, value)
-        gcc_jit_rvalue *
-        gcc_jit_context_zero(ctxt, numeric_type)
-        gcc_jit_object *
-        gcc_jit_field_as_object(field)
-        gcc_jit_object *
-        gcc_jit_function_as_object(func)
-        void
-        gcc_jit_function_dump_to_dot(func, path)
-        gcc_jit_param *
-        gcc_jit_function_get_param(func, index)
-        gcc_jit_block *
-        gcc_jit_function_new_block(func, name)
-        gcc_jit_lvalue *
-        gcc_jit_function_new_local(func, loc, type, name)
-        gcc_jit_object *
-        gcc_jit_location_as_object(loc)
-        gcc_jit_lvalue *
-        gcc_jit_lvalue_access_field(struct_or_union, loc, field)
-        cc_jit_object *
-        gcc_jit_lvalue_as_object(lvalue)
-        gcc_jit_rvalue *
-        gcc_jit_lvalue_as_rvalue(lvalue)
-        gcc_jit_rvalue *
-        gcc_jit_lvalue_get_address(lvalue, loc)
-        gcc_jit_context *
-        gcc_jit_object_get_context(obj)
-        const char *
-        gcc_jit_object_get_debug_string(obj)
-        gcc_jit_lvalue *
-        gcc_jit_param_as_lvalue(param)
-        gcc_jit_object *
-        gcc_jit_param_as_object(param)
-        gcc_jit_rvalue *
-        gcc_jit_param_as_rvalue(param)
-        void *
-        gcc_jit_result_get_code(result, funcname)
-        void *
-        gcc_jit_result_get_global(result, name)
-        void
-        gcc_jit_result_release(result)
-        gcc_jit_rvalue *
-        gcc_jit_rvalue_access_field(struct_or_union, loc, field)
-        gcc_jit_object *
-        gcc_jit_rvalue_as_object(rvalue)
-        gcc_jit_lvalue *
-        gcc_jit_rvalue_dereference(rvalue, loc)
-        gcc_jit_lvalue *
-        gcc_jit_rvalue_dereference_field(ptr, loc, field)
-        gcc_jit_type *
-        gcc_jit_rvalue_get_type(rvalue)
-        gcc_jit_type *
-        gcc_jit_struct_as_type(struct_type)
-        void
-        gcc_jit_struct_set_fields(struct_type, loc, fields)
-        gcc_jit_object *
-        gcc_jit_type_as_object(type)
-        gcc_jit_type *
-        gcc_jit_type_get_const(type)
-        gcc_jit_type *
-        gcc_jit_type_get_pointer(type)
-        gcc_jit_type *
-        gcc_jit_type_get_volatile(type)
-    !,
-);
+sub gcc_jit_blockPtr::end_with_void_return {
+    die "this block is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_blockPtr"}{$_[0]};
+    GCCJIT::gcc_jit_block_end_with_void_return(@_);
+}
+
+sub gcc_jit_blockPtr::get_function {
+    die "this block is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_blockPtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_block_get_function(@_);
+    $stash{"gcc_jit_functionPtr"}{$obj} = $stash{"gcc_jit_blockPtr"}{$_[0]};
+    weaken $stash{"gcc_jit_functionPtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_casePtr::as_object {
+    die "this case is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_casePtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_case_as_object(@_);
+    $stash{"gcc_jit_objectPtr"}{$obj} = $stash{"gcc_jit_casePtr"}{$_[0]};
+    weaken $stash{"gcc_jit_objectPtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::acquire {
+    my $obj = GCCJIT::gcc_jit_context_acquire(@_);
+    $stash{"gcc_jit_contextPtr"}{$obj} = $_[0];
+    $obj;
+}
+
+*gcc_jit_contextPtr::add_command_line_option = \&GCCJIT::gcc_jit_context_add_command_line_option;
+
+*gcc_jit_contextPtr::compile = \&GCCJIT::gcc_jit_context_compile;
+
+*gcc_jit_contextPtr::compile_to_file = \&GCCJIT::gcc_jit_context_compile_to_file;
+
+*gcc_jit_contextPtr::dump_reproducer_to_file = \&GCCJIT::gcc_jit_context_dump_reproducer_to_file;
+
+*gcc_jit_contextPtr::dump_to_file = \&GCCJIT::gcc_jit_context_dump_to_file;
+
+sub gcc_jit_contextPtr::get_builtin_function {
+    my $obj = GCCJIT::gcc_jit_context_get_builtin_function(@_);
+    $stash{"gcc_jit_functionPtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_functionPtr"}{$obj};
+    $obj;
+}
+
+*gcc_jit_contextPtr::get_first_error = \&GCCJIT::gcc_jit_context_get_first_error;
+
+sub gcc_jit_contextPtr::get_int_type {
+    my $obj = GCCJIT::gcc_jit_context_get_int_type(@_);
+    $stash{"gcc_jit_typePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_typePtr"}{$obj};
+    $obj;
+}
+
+*gcc_jit_contextPtr::get_last_error = \&GCCJIT::gcc_jit_context_get_last_error;
+
+sub gcc_jit_contextPtr::get_type {
+    my $obj = GCCJIT::gcc_jit_context_get_type(@_);
+    $stash{"gcc_jit_typePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_typePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_array_access {
+    my $obj = GCCJIT::gcc_jit_context_new_array_access(@_);
+    $stash{"gcc_jit_lvaluePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_lvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_array_type {
+    my $obj = GCCJIT::gcc_jit_context_new_array_type(@_);
+    $stash{"gcc_jit_typePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_typePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_binary_op {
+    my $obj = GCCJIT::gcc_jit_context_new_binary_op(@_);
+    $stash{"gcc_jit_rvaluePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_rvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_call {
+    my $obj = GCCJIT::gcc_jit_context_new_call(@_);
+    $stash{"gcc_jit_rvaluePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_rvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_call_through_ptr {
+    my $obj = GCCJIT::gcc_jit_context_new_call_through_ptr(@_);
+    $stash{"gcc_jit_rvaluePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_rvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_case {
+    my $obj = GCCJIT::gcc_jit_context_new_case(@_);
+    $stash{"gcc_jit_casePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_casePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_cast {
+    my $obj = GCCJIT::gcc_jit_context_new_cast(@_);
+    $stash{"gcc_jit_rvaluePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_rvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_child_context {
+    my $obj = GCCJIT::gcc_jit_context_new_child_context(@_);
+    $stash{"gcc_jit_contextPtr"}{$obj} = $_[0];
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_comparison {
+    my $obj = GCCJIT::gcc_jit_context_new_comparison(@_);
+    $stash{"gcc_jit_rvaluePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_rvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_field {
+    my $obj = GCCJIT::gcc_jit_context_new_field(@_);
+    $stash{"gcc_jit_fieldPtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_fieldPtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_function {
+    my $obj = GCCJIT::gcc_jit_context_new_function(@_);
+    $stash{"gcc_jit_functionPtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_functionPtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_function_ptr_type {
+    my $obj = GCCJIT::gcc_jit_context_new_function_ptr_type(@_);
+    $stash{"gcc_jit_typePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_typePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_global {
+    my $obj = GCCJIT::gcc_jit_context_new_global(@_);
+    $stash{"gcc_jit_lvaluePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_lvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_location {
+    my $obj = GCCJIT::gcc_jit_context_new_location(@_);
+    $stash{"gcc_jit_locationPtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_locationPtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_opaque_struct {
+    my $obj = GCCJIT::gcc_jit_context_new_opaque_struct(@_);
+    $stash{"gcc_jit_structPtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_structPtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_param {
+    my $obj = GCCJIT::gcc_jit_context_new_param(@_);
+    $stash{"gcc_jit_paramPtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_paramPtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_rvalue_from_double {
+    my $obj = GCCJIT::gcc_jit_context_new_rvalue_from_double(@_);
+    $stash{"gcc_jit_rvaluePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_rvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_rvalue_from_int {
+    my $obj = GCCJIT::gcc_jit_context_new_rvalue_from_int(@_);
+    $stash{"gcc_jit_rvaluePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_rvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_rvalue_from_long {
+    my $obj = GCCJIT::gcc_jit_context_new_rvalue_from_long(@_);
+    $stash{"gcc_jit_rvaluePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_rvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_rvalue_from_ptr {
+    my $obj = GCCJIT::gcc_jit_context_new_rvalue_from_ptr(@_);
+    $stash{"gcc_jit_rvaluePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_rvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_string_literal {
+    my $obj = GCCJIT::gcc_jit_context_new_string_literal(@_);
+    $stash{"gcc_jit_rvaluePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_rvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_struct_type {
+    my $obj = GCCJIT::gcc_jit_context_new_struct_type(@_);
+    $stash{"gcc_jit_structPtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_structPtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_unary_op {
+    my $obj = GCCJIT::gcc_jit_context_new_unary_op(@_);
+    $stash{"gcc_jit_rvaluePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_rvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::new_union_type {
+    my $obj = GCCJIT::gcc_jit_context_new_union_type(@_);
+    $stash{"gcc_jit_typePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_typePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::null {
+    my $obj = GCCJIT::gcc_jit_context_null(@_);
+    $stash{"gcc_jit_rvaluePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_rvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_contextPtr::one {
+    my $obj = GCCJIT::gcc_jit_context_one(@_);
+    $stash{"gcc_jit_rvaluePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_rvaluePtr"}{$obj};
+    $obj;
+}
+
+*gcc_jit_contextPtr::set_bool_allow_unreachable_blocks = \&GCCJIT::gcc_jit_context_set_bool_allow_unreachable_blocks;
+
+*gcc_jit_contextPtr::set_bool_option = \&GCCJIT::gcc_jit_context_set_bool_option;
+
+*gcc_jit_contextPtr::set_int_option = \&GCCJIT::gcc_jit_context_set_int_option;
+
+*gcc_jit_contextPtr::set_logfile = \&GCCJIT::gcc_jit_context_set_logfile;
+
+*gcc_jit_contextPtr::set_str_option = \&GCCJIT::gcc_jit_context_set_str_option;
+
+sub gcc_jit_contextPtr::zero {
+    my $obj = GCCJIT::gcc_jit_context_zero(@_);
+    $stash{"gcc_jit_rvaluePtr"}{$obj} = $_[0];
+    weaken $stash{"gcc_jit_rvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_fieldPtr::as_object {
+    die "this field is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_fieldPtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_field_as_object(@_);
+    $stash{"gcc_jit_objectPtr"}{$obj} = $stash{"gcc_jit_fieldPtr"}{$_[0]};
+    weaken $stash{"gcc_jit_objectPtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_functionPtr::as_object {
+    die "this function is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_functionPtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_function_as_object(@_);
+    $stash{"gcc_jit_objectPtr"}{$obj} = $stash{"gcc_jit_functionPtr"}{$_[0]};
+    weaken $stash{"gcc_jit_objectPtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_functionPtr::dump_to_dot {
+    die "this function is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_functionPtr"}{$_[0]};
+    GCCJIT::gcc_jit_function_dump_to_dot(@_);
+}
+
+sub gcc_jit_functionPtr::get_param {
+    die "this function is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_functionPtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_function_get_param(@_);
+    $stash{"gcc_jit_paramPtr"}{$obj} = $stash{"gcc_jit_functionPtr"}{$_[0]};
+    weaken $stash{"gcc_jit_paramPtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_functionPtr::new_block {
+    die "this function is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_functionPtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_function_new_block(@_);
+    $stash{"gcc_jit_blockPtr"}{$obj} = $stash{"gcc_jit_functionPtr"}{$_[0]};
+    weaken $stash{"gcc_jit_blockPtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_functionPtr::new_local {
+    die "this function is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_functionPtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_function_new_local(@_);
+    $stash{"gcc_jit_lvaluePtr"}{$obj} = $stash{"gcc_jit_functionPtr"}{$_[0]};
+    weaken $stash{"gcc_jit_lvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_locationPtr::as_object {
+    die "this location is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_locationPtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_location_as_object(@_);
+    $stash{"gcc_jit_objectPtr"}{$obj} = $stash{"gcc_jit_locationPtr"}{$_[0]};
+    weaken $stash{"gcc_jit_objectPtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_lvaluePtr::access_field {
+    die "this lvalue is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_lvaluePtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_lvalue_access_field(@_);
+    $stash{"gcc_jit_lvaluePtr"}{$obj} = $stash{"gcc_jit_lvaluePtr"}{$_[0]};
+    weaken $stash{"gcc_jit_lvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_lvaluePtr::as_object {
+    die "this lvalue is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_lvaluePtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_lvalue_as_object(@_);
+    $stash{"gcc_jit_objectPtr"}{$obj} = $stash{"gcc_jit_lvaluePtr"}{$_[0]};
+    weaken $stash{"gcc_jit_objectPtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_lvaluePtr::as_rvalue {
+    die "this lvalue is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_lvaluePtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_lvalue_as_rvalue(@_);
+    $stash{"gcc_jit_rvaluePtr"}{$obj} = $stash{"gcc_jit_lvaluePtr"}{$_[0]};
+    weaken $stash{"gcc_jit_rvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_lvaluePtr::get_address {
+    die "this lvalue is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_lvaluePtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_lvalue_get_address(@_);
+    $stash{"gcc_jit_rvaluePtr"}{$obj} = $stash{"gcc_jit_lvaluePtr"}{$_[0]};
+    weaken $stash{"gcc_jit_rvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_objectPtr::get_context {
+    $stash{"gcc_jit_objectPtr"}{$_[0]}
+}
+
+sub gcc_jit_objectPtr::get_debug_string {
+    die "this object is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_objectPtr"}{$_[0]};
+    GCCJIT::gcc_jit_object_get_debug_string(@_);
+}
+
+sub gcc_jit_paramPtr::as_lvalue {
+    die "this param is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_paramPtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_param_as_lvalue(@_);
+    $stash{"gcc_jit_lvaluePtr"}{$obj} = $stash{"gcc_jit_paramPtr"}{$_[0]};
+    weaken $stash{"gcc_jit_lvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_paramPtr::as_object {
+    die "this param is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_paramPtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_param_as_object(@_);
+    $stash{"gcc_jit_objectPtr"}{$obj} = $stash{"gcc_jit_paramPtr"}{$_[0]};
+    weaken $stash{"gcc_jit_objectPtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_paramPtr::as_rvalue {
+    die "this param is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_paramPtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_param_as_rvalue(@_);
+    $stash{"gcc_jit_rvaluePtr"}{$obj} = $stash{"gcc_jit_paramPtr"}{$_[0]};
+    weaken $stash{"gcc_jit_rvaluePtr"}{$obj};
+    $obj;
+}
+
+*gcc_jit_resultPtr::get_code = \&GCCJIT::gcc_jit_result_get_code;
+
+*gcc_jit_resultPtr::get_global = \&GCCJIT::gcc_jit_result_get_global;
+
+sub gcc_jit_rvaluePtr::access_field {
+    die "this rvalue is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_rvaluePtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_rvalue_access_field(@_);
+    $stash{"gcc_jit_rvaluePtr"}{$obj} = $stash{"gcc_jit_rvaluePtr"}{$_[0]};
+    weaken $stash{"gcc_jit_rvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_rvaluePtr::as_object {
+    die "this rvalue is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_rvaluePtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_rvalue_as_object(@_);
+    $stash{"gcc_jit_objectPtr"}{$obj} = $stash{"gcc_jit_rvaluePtr"}{$_[0]};
+    weaken $stash{"gcc_jit_objectPtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_rvaluePtr::dereference {
+    die "this rvalue is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_rvaluePtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_rvalue_dereference(@_);
+    $stash{"gcc_jit_lvaluePtr"}{$obj} = $stash{"gcc_jit_rvaluePtr"}{$_[0]};
+    weaken $stash{"gcc_jit_lvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_rvaluePtr::dereference_field {
+    die "this rvalue is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_rvaluePtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_rvalue_dereference_field(@_);
+    $stash{"gcc_jit_lvaluePtr"}{$obj} = $stash{"gcc_jit_rvaluePtr"}{$_[0]};
+    weaken $stash{"gcc_jit_lvaluePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_rvaluePtr::get_type {
+    die "this rvalue is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_rvaluePtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_rvalue_get_type(@_);
+    $stash{"gcc_jit_typePtr"}{$obj} = $stash{"gcc_jit_rvaluePtr"}{$_[0]};
+    weaken $stash{"gcc_jit_typePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_structPtr::as_type {
+    die "this struct is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_structPtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_struct_as_type(@_);
+    $stash{"gcc_jit_typePtr"}{$obj} = $stash{"gcc_jit_structPtr"}{$_[0]};
+    weaken $stash{"gcc_jit_typePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_structPtr::set_fields {
+    die "this struct is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_structPtr"}{$_[0]};
+    GCCJIT::gcc_jit_struct_set_fields(@_);
+}
+
+sub gcc_jit_typePtr::as_object {
+    die "this type is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_typePtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_type_as_object(@_);
+    $stash{"gcc_jit_objectPtr"}{$obj} = $stash{"gcc_jit_typePtr"}{$_[0]};
+    weaken $stash{"gcc_jit_objectPtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_typePtr::get_const {
+    die "this type is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_typePtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_type_get_const(@_);
+    $stash{"gcc_jit_typePtr"}{$obj} = $stash{"gcc_jit_typePtr"}{$_[0]};
+    weaken $stash{"gcc_jit_typePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_typePtr::get_pointer {
+    die "this type is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_typePtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_type_get_pointer(@_);
+    $stash{"gcc_jit_typePtr"}{$obj} = $stash{"gcc_jit_typePtr"}{$_[0]};
+    weaken $stash{"gcc_jit_typePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_typePtr::get_volatile {
+    die "this type is no longer usable because parent context was destroyed"
+        unless defined $stash{"gcc_jit_typePtr"}{$_[0]};
+    my $obj = GCCJIT::gcc_jit_type_get_volatile(@_);
+    $stash{"gcc_jit_typePtr"}{$obj} = $stash{"gcc_jit_typePtr"}{$_[0]};
+    weaken $stash{"gcc_jit_typePtr"}{$obj};
+    $obj;
+}
+
+sub gcc_jit_blockPtr::DESTROY {
+    delete $stash{"gcc_jit_blockPtr"}{$_[0]};
+}
+
+sub gcc_jit_casePtr::DESTROY {
+    delete $stash{"gcc_jit_casePtr"}{$_[0]};
+}
+
+sub gcc_jit_contextPtr::DESTROY {
+    delete $stash{"gcc_jit_contextPtr"}{$_[0]};
+    GCCJIT::gcc_jit_context_release($_[0]);
+}
+
+sub gcc_jit_fieldPtr::DESTROY {
+    delete $stash{"gcc_jit_fieldPtr"}{$_[0]};
+}
+
+sub gcc_jit_functionPtr::DESTROY {
+    delete $stash{"gcc_jit_functionPtr"}{$_[0]};
+}
+
+sub gcc_jit_locationPtr::DESTROY {
+    delete $stash{"gcc_jit_locationPtr"}{$_[0]};
+}
+
+sub gcc_jit_lvaluePtr::DESTROY {
+    delete $stash{"gcc_jit_lvaluePtr"}{$_[0]};
+}
+
+sub gcc_jit_objectPtr::DESTROY {
+    delete $stash{"gcc_jit_objectPtr"}{$_[0]};
+}
+
+sub gcc_jit_paramPtr::DESTROY {
+    delete $stash{"gcc_jit_paramPtr"}{$_[0]};
+}
+
+sub gcc_jit_resultPtr::DESTROY {
+    GCCJIT::gcc_jit_result_release($_[0]);
+}
+
+sub gcc_jit_rvaluePtr::DESTROY {
+    delete $stash{"gcc_jit_rvaluePtr"}{$_[0]};
+}
+
+sub gcc_jit_structPtr::DESTROY {
+    delete $stash{"gcc_jit_structPtr"}{$_[0]};
+}
+
+sub gcc_jit_typePtr::DESTROY {
+    delete $stash{"gcc_jit_typePtr"}{$_[0]};
+}
 
 1;
+__END__
+=head1 NAME
+GCCJIT::Wrapper - object oriented wrapper for GCCJIT.
+
+=head1 DESCRIPTION
+Do not use this package directly. Instead, use L<GCCJIT::Context>.
