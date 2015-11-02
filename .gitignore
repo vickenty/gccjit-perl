@@ -9,3 +9,4 @@ GCCJIT.bs
 GCCJIT.o
 .vagrant
 MANIFEST.bak
+Makefile.old
