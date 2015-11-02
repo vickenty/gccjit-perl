@@ -208,34 +208,62 @@ GCCJIT - Perl bindings for GCCJIT library
 
 =head1 SYNOPSIS
 
-    use GCCJIT qw/:all/;
+    use GCCJIT qw/:constants/;
+    use GCCJIT::Context;
 
-    my $ctx = gcc_jit_context_acquire;
-    my $int = gcc_jit_context_get_type $ctx, GCC_JIT_TYPE_INT;
+    my $ctxt = GCCJIT::Context->acquire();
+    my $int_type = $ctxt->get_type(GCC_JIT_TYPE_INT);
 
-    my $arg = gcc_jit_context_new_param $ctx, undef, $int, "i";
-    my $fun = gcc_jit_context_new_function $ctx, undef,
-        GCC_JIT_FUNCTION_EXPORTED, $int, "square", [ $arg ], 0;
+    my $param_i = $ctxt->new_param(undef, $int_type, "i");
+    my $func = $ctxt->new_function(undef, GCC_JIT_FUNCTION_EXPORTED,
+        $int_type, "square", [ $param_i ], 0);
 
-    my $tmp = gcc_jit_context_new_binary_op $ctx, undef, GCC_JIT_BINARY_OP_MULT, $int,
-        jit_param_as_rvalue($arg), jit_param_as_rvalue($arg);
+    my $block = $func->new_block("my new block");
 
-    my $blk = gcc_jit_function_new_block $fun, "entry";
-    gcc_jit_block_end_with_return $blk, undef, $tmp;
+    my $expr = $ctxt->new_binary_op(undef, GCC_JIT_BINARY_OP_MULT,
+        $int_type, $param_i->as_rvalue(), $param_i->as_rvalue());
 
-    my $res = gcc_jit_context_compile $ctx;
-    my $ptr = gcc_jit_result_get_code $res, "square";
+    $block->end_with_return(undef, $expr);
+
+    my $result = $ctxt->compile();
+    my $raw_ptr = $result->get_code("square");
+
+    use FFI::Raw;
+    my $ffi = FFI::Raw->new_from_ptr($raw_ptr, FFI::Raw::int, FFI::Raw::int);
+    say $ffi->(4);
 
 =head1 DESCRIPTION
 
-Every function (except C<gcc_jit_context_enable_dump>) is exported as is. Where
-C function accepts an array as two arguments C<int num_items> and C<item_t *items>
-a single argument is expected.
+This package provides bindings for libgccjit, an embeddable compiler backend
+based on GCC. There are two packages in this distribution:
 
-C<gcc_jit_context_enable_dump> function was left out of these bindings, due to the
-difficulty in handling it's C<out_ptr> argument.
+C<GCCJIT>, this package, provides direct bindings to the C API of libgccjit.
 
-These library does not provide an easy way to call compiled functions. Libraries like L<FFI::Raw> can help with that.
+L<GCCJIT::Context> provides a more succinct, object-oriented view of the same API.
+
+Where gccjit functions expects an array and its length as two arguments, GCCJIT
+variant takes a single array reference instead.
+
+=head1 EXPORTS
+
+This package does not export anything by default. Exportable are all gccjit
+constants and functions, and following tags:
+
+=over
+
+=item :constants
+
+Exports all libgccjit constants.
+
+=item :raw_api
+
+Exports raw libgccjit functions (use L<GCCJIT::Context> wrappers instead).
+
+=item :all
+
+Exports everything.
+
+=back
 
 =head1 SEE ALSO
 
@@ -245,7 +273,7 @@ GCCJIT project wiki page: L<https://gcc.gnu.org/wiki/JIT>
 
 =head1 AUTHOR
 
-Vikentiy Fesunov E<lt>cpan-gccjit@setattr.netE<gt>
+Vickenty Fesunov E<lt>cpan-gccjit@setattr.netE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
