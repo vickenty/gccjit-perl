@@ -22,6 +22,15 @@ WriteMakefile(
     },
     PREREQ_PM         => {
     },
+    META_MERGE => {
+        resources => {
+            repository => {
+                type => "git",
+                url => "https://github.com/vickenty/gccjit-perl",
+                url => "https://github.com/vickenty/gccjit-perl",
+            },
+        },
+    },
 );
 if  (eval {require ExtUtils::Constant; 1}) {
   # If you edit these definitions to change the constants used by this module,
