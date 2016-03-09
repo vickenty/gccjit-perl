@@ -1,6 +1,5 @@
 package GCCJIT;
 
-use 5.020002;
 use strict;
 use warnings;
 use Carp;

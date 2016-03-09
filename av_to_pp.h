@@ -1,7 +1,7 @@
 void **av_to_pp(pTHX_ AV* av, char *ctx, char *avname, char *typename)
 {
   void **ptr;
-  SSize_t idx, size = av_top_index(av) + 1;
+  SSize_t idx, size = av_len(av) + 1;
   if (size == 0)
     return NULL;
 
@@ -25,7 +25,7 @@ void **av_to_pp(pTHX_ AV* av, char *ctx, char *avname, char *typename)
   int num_##av;
 
 #define AVPP_CODE(av, ctx, type, typename) {                    \
-    num_##av = av_top_index(av) + 1;                            \
+    num_##av = av_len(av) + 1;                            \
     ptr_##av = (type*) av_to_pp(aTHX_ av, ctx, #av, typename);  \
   }
 
