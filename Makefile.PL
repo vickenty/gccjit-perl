@@ -1,4 +1,3 @@
-use 5.020002;
 use ExtUtils::MakeMaker;
 WriteMakefile(
     NAME              => 'GCCJIT',
