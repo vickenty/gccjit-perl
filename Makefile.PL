@@ -11,11 +11,15 @@ WriteMakefile(
 	"Test::Fatal" => 0,
     },
     META_MERGE => {
+        "meta-spec" => { version => 2 },
         resources => {
             repository => {
                 type => "git",
                 url => "https://github.com/vickenty/gccjit-perl",
-                url => "https://github.com/vickenty/gccjit-perl",
+                web => "https://github.com/vickenty/gccjit-perl",
+            },
+            bugtracker => {
+                web => "https://github.com/vickenty/gccjit-perl/issues",
             },
         },
     },
