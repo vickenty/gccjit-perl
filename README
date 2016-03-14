@@ -17,7 +17,7 @@ DEPENDENCIES
 This module requires these other modules and libraries:
 
 GCC 5.1.0.
-Perl 5.20.2.
+Perl of decently recent version.
 
 COPYRIGHT AND LICENCE
 
