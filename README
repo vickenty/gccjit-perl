@@ -1,4 +1,4 @@
-GCCJIT version 0.01
+GCCJIT version 0.02
 ===================
 
 Perl bindings for GCC JIT library (libgccjit).
