@@ -104,16 +104,18 @@ foreach my $decl (sort { $a->{name} cmp $b->{name} } @$xs_decls) {
         print "$decl->{package}::$decl->{name}(\@_);\n";
 
         if ($need_stash) {
+            print "    if (defined \$obj) {\n";
             if ($objpkg eq "gcc_jit_contextPtr") {
-                print "    \$stash{\"$retpkg\"}{\$obj} = \$_[0];\n";
+                print "        \$stash{\"$retpkg\"}{\$obj} = \$_[0];\n";
             }
             else {
-                print "    \$stash{\"$retpkg\"}{\$obj} = \$stash{\"$objpkg\"}{\$_[0]};\n";
+                print "        \$stash{\"$retpkg\"}{\$obj} = \$stash{\"$objpkg\"}{\$_[0]};\n";
             }
             if ($need_weaken) {
-                print "    weaken \$stash{\"$retpkg\"}{\$obj};\n";
+                print "        weaken \$stash{\"$retpkg\"}{\$obj};\n";
             }
 
+            print "    }\n";
             print "    \$obj;\n";
         }
         print "}\n\n";
